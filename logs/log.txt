@@ -1,0 +1,2 @@
+[Trainer.py], 2020-02-21 10:23:25: start training one epoch
+[Trainer.py], 2020-02-21 10:28:08: Batch 0: loss=6.669948577880859, acc=0.013157894736842105, lr=0.001
