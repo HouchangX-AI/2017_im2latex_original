@@ -158,5 +158,5 @@ class Model(nn.Module):
             raise NotImplementedError('beam-search method is not implemented yet.')
             generator = BeamSearchDecoder()
 
-        preds, logits, attn_weights = generator.generate(start_token)
-        return preds, logits, attn_weights
+        preds, logits = generator.generate(start_token)
+        return preds, logits
