@@ -51,11 +51,14 @@ class Trainer:
         epoch_loss = 0
         epoch_acc = 0
         predictions = []
+        iii = 0
         while not epoch_ended:
+            print('iii', iii+1)
             x_train, y_train, epoch_ended = self.train_loader.get_next_batch()  # np.array(batch_imgs), batch_formulas_tensor, end_of_epoch
             x_train = torch.from_numpy(x_train).float().to(self.device)
             y_train = torch.from_numpy(y_train).long().to(self.device)
             self.optimizer.zero_grad()
+            print(batch_counter, 'trainer1.1')
             logits = self.model(x_train, y_train, self.teacher_forcing_ratio)
             loss = self.criterian(logits[:, 1:, :].contiguous().view(-1, logits.shape[-1]),
                                   y_train[:, 1:].contiguous().view(-1))
@@ -64,15 +67,19 @@ class Trainer:
             self.optimizer.step()
             mask = (y_train != self.train_loader.vocab.pad_token)
             preds = logits.argmax(dim=2)
+            print(batch_counter, 'trainer1.2')
             acc = ((y_train == preds) * mask).sum().item() / mask.sum().item()
             if batch_counter % self.print_every_batch == 0:
                 self.logger('Batch {}: loss={}, acc={}, lr={}'.format(batch_counter, loss, acc, get_lr(self.optimizer)))
             epoch_loss += loss.item()
             epoch_acc += acc
+            print(batch_counter, 'trainer1.3')
             for i in range(preds.shape[0]):
                 pred = preds[i].cpu().numpy()
                 predictions.append(self.train_loader.vocab.tensor2formula(pred, pretty=True))
+            print('batch_counter_old', batch_counter)
             batch_counter += 1
+            print('batch_counter_new', batch_counter)
         self.logger('Epoch finished, loss={} acc={}, lr={}'.format(epoch_loss/batch_counter, epoch_acc/batch_counter, get_lr(self.optimizer)))
         if get_lr(self.optimizer) > self.learning_rate_min:
             self.scheduler.step()
@@ -94,7 +101,9 @@ class Trainer:
             batch_counter = 0
             epoch_loss = 0
             epoch_acc = 0
+            iiii = 0
             while not epoch_ended:
+                print(iiii + 1)
                 if eval_loader.has_label:
                     x_eval, y_eval, epoch_ended = eval_loader.get_next_batch()
                     y_eval = torch.from_numpy(y_eval).long().to(self.device)
@@ -103,7 +112,11 @@ class Trainer:
                 x_eval = torch.from_numpy(x_eval).float().to(self.device)
                 if eval_loader.has_label:
                     max_len = y_eval.shape[1]
-                preds, logits, attn_weights = self.model.generate(x_eval, start_token, max_len, method)
+            
+                #preds, logits, attn_weights = self.model.generate(x_eval, start_token, max_len, method)
+                preds, logits = self.model.generate(x_eval, start_token, max_len, method)
+
+
                 if eval_loader.has_label:
                     epoch_loss += self.criterian(logits[:, 1:, :].contiguous().view(-1, logits.shape[-1]),
                                                  y_eval[:, 1:].contiguous().view(-1))
@@ -118,11 +131,14 @@ class Trainer:
                     self.logger('batch {} completed.'.format(batch_counter))
             self.logger('evaluation finished.')
 
-            # 改
+            # if eval_loader.has_label:
+            #     return predictions, attn_weights, epoch_loss/batch_counter, epoch_acc/batch_counter
+            # else:
+            #     return predictions, attn_weights
             if eval_loader.has_label:
-                return predictions, attn_weights, epoch_loss/batch_counter, epoch_acc/batch_counter
+                return predictions, epoch_loss/batch_counter, epoch_acc/batch_counter
             else:
-                return predictions, attn_weights
+                return predictions
 
     def save(self, epoch, loss, acc):
         if not os.path.isdir(self.checkpoints_dir):
