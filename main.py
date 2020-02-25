@@ -12,9 +12,7 @@ def get_trainer(config):
     }
     vocab = utils.Vocab(vocab_config)
     vocab_size = len(vocab.token2idx.keys())
-    # encoder中提取图片的features，multi-CNN，return x
     cnn_model = cnn.CNN(config['cnn_params']).to(config['device'])
-    #
     encoder_model = encoder.Encoder(config['cnn_params']['conv6_c'], config['encoder_hidden_size'],
                                     config['bidirectional'], config['device']).to(config['device'])
 
@@ -26,7 +24,6 @@ def get_trainer(config):
         'shuffle' : False,
     }
 
-    # config: vocab, batch_size, images_path, formulas_path=None, sort_by_formulas_len=False, shuffle=False):
     train_loader = utils.data_loader(vocab, train_loader_config)
 
     embedding_model = embedding.Embedding(vocab_size, config['embedding_size'], vocab.pad_token).to(config['device'])
