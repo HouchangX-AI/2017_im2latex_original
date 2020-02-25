@@ -18,9 +18,9 @@ config = {
     # ======================
     #   general parameters
     # ======================
-    'batch_size' : 1, #32
+    'batch_size' : 3, #32
     'epochs' : 40,
-    'print_every_batch' : 100,
+    'print_every_batch' : 50,
     'learning_rate' : 1e-3,
     'learning_rate_decay' : .5,
     'learning_rate_decay_step' : 3,
