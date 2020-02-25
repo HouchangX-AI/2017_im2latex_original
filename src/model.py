@@ -68,9 +68,7 @@ class Model(nn.Module):
         return x + torch.from_numpy(position_enc).type(torch.FloatTensor).to(self.device)
 
 
-    #-------------------以上为features+position_embedding--------------------
 
-    # 含有attn_weight需更改
     def decoder_step(self, input_token, hp, cp, op, encoder_outputs):
         '''
             input:
@@ -85,8 +83,11 @@ class Model(nn.Module):
                 > attn_weight: attention alignments (batch, 1, H'*W')
         '''
         token_embedding = self.embedding(input_token).unsqueeze(1) # (batch, 1, embedding_size)
-        output, (hn, cn), on, attn_weight = self.decoder(token_embedding, hp, cp, op, encoder_outputs)
-        return output, (hn, cn), on, attn_weight
+
+        # output, (hn, cn), on, attn_weight = self.decoder(token_embedding, hp, cp, op, encoder_outputs)
+        # return output, (hn, cn), on, attn_weight
+        output, (hn, cn), on = self.decoder(token_embedding, hp, cp, op, encoder_outputs)
+        return output, (hn, cn), on
 
     def forward(self, x, y, teacher_forcing_ratio):
         '''
@@ -114,9 +115,12 @@ class Model(nn.Module):
         logits = torch.zeros(y.shape[0], y.shape[1], self.decoder.output_size, device=self.device) # (batch, len, vocab_size)
         logits[:, 0, y[0, 0]] = 1
 
-        # 含有attn_weight, 改  teacher_forcing_ratio decoder预测时用真实值
         for t in range(1, y.shape[1]):
-            output, (hn, cn), on, attn_weight = self.decoder_step(next_token, hn, cn, on, encoder_outputs)
+
+            output, (hn, cn), on = self.decoder_step(next_token, hn, cn, on, encoder_outputs)
+            #output, (hn, cn), on, attn_weight = self.decoder_step(next_token, hn, cn, on, encoder_outputs)
+
+
             logits[:, t, :] = output
             if teacher_forcing_ratio < torch.rand(1).item():
                 next_token = output.multinomial(1).squeeze(1) # (batch)
