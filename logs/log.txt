@@ -1,2 +1,25 @@
 [Trainer.py], 2020-02-21 10:23:25: start training one epoch
 [Trainer.py], 2020-02-21 10:28:08: Batch 0: loss=6.669948577880859, acc=0.013157894736842105, lr=0.001
+[Trainer.py], 2020-02-24 10:51:38: start training one epoch
+[Trainer.py], 2020-02-24 10:53:20: start training one epoch
+[Trainer.py], 2020-02-24 10:54:36: start training one epoch
+[Trainer.py], 2020-02-24 10:57:19: start training one epoch
+[Trainer.py], 2020-02-24 10:59:54: Batch 0: loss=6.639773845672607, acc=0.013157894736842105, lr=0.001
+[Trainer.py], 2020-02-24 11:01:32: start training one epoch
+[Trainer.py], 2020-02-24 11:04:15: Batch 0: loss=6.6487040519714355, acc=0.013157894736842105, lr=0.001
+[Trainer.py], 2020-02-24 11:06:30: start training one epoch
+[Trainer.py], 2020-02-24 11:09:04: Batch 0: loss=6.641358852386475, acc=0.013157894736842105, lr=0.001
+[Trainer.py], 2020-02-24 11:41:53: start training one epoch
+[Trainer.py], 2020-02-24 11:44:22: Batch 0: loss=6.645383834838867, acc=0.013157894736842105, lr=0.001
+[Trainer.py], 2020-02-24 11:48:34: start training one epoch
+[Trainer.py], 2020-02-24 11:51:04: Batch 0: loss=6.646030902862549, acc=0.013157894736842105, lr=0.001
+[Trainer.py], 2020-02-24 12:03:17: Batch 5: loss=6.498889923095703, acc=0.02127659574468085, lr=0.001
+[Trainer.py], 2020-02-24 12:16:17: Batch 10: loss=6.749333381652832, acc=0.14634146341463414, lr=0.001
+[Trainer.py], 2020-02-24 12:28:44: Batch 15: loss=4.770725250244141, acc=0.3611111111111111, lr=0.001
+[Trainer.py], 2020-02-24 12:41:55: Batch 20: loss=5.484915733337402, acc=0.34285714285714286, lr=0.001
+[Trainer.py], 2020-02-24 12:54:34: Batch 25: loss=4.194648742675781, acc=0.45454545454545453, lr=0.001
+[Trainer.py], 2020-02-24 13:09:20: Batch 30: loss=6.1136884689331055, acc=0.1875, lr=0.001
+[Trainer.py], 2020-02-24 13:22:36: Batch 35: loss=5.218989849090576, acc=0.3, lr=0.001
+[Trainer.py], 2020-02-24 13:35:38: Batch 40: loss=5.695699214935303, acc=0.13793103448275862, lr=0.001
+[Trainer.py], 2020-02-24 13:48:40: Batch 45: loss=5.803713321685791, acc=0.14285714285714285, lr=0.001
+[Trainer.py], 2020-02-24 14:01:20: Batch 50: loss=4.0592193603515625, acc=0.4444444444444444, lr=0.001
