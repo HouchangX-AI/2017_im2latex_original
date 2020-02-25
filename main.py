@@ -28,14 +28,17 @@ def get_trainer(config):
 
     # config: vocab, batch_size, images_path, formulas_path=None, sort_by_formulas_len=False, shuffle=False):
     train_loader = utils.data_loader(vocab, train_loader_config)
-    # 一个保存了固定字典和大小的简单查找表，模块的输入是一个下标的列表，输出是对应的词嵌入
+
     embedding_model = embedding.Embedding(vocab_size, config['embedding_size'], vocab.pad_token).to(config['device'])
-    # 包含attention模型，改成encoder-decoder时需要去掉
-    decoder_model = decoder.AttnDecoder(config['embedding_size'], config['decoder_hidden_size'],
+    print('embedding')
+
+    decoder_model = decoder.DecoderRNN(config['embedding_size'], config['decoder_hidden_size'],
                                         config['encoder_hidden_size']*(2 if config['bidirectional'] else 1), vocab_size,
                                         config['device']).to(config['device'])
-    # 存在attention，需更改
+
+    print('decoder')
     _model = model.Model(cnn_model, encoder_model, embedding_model, decoder_model, config['device'])
+    print('model')
 
     trainer_config = {
         'device' : config['device'],
@@ -54,6 +57,7 @@ def get_trainer(config):
     }
 
     _trainer = trainer.Trainer(_model, train_loader, trainer_config)
+    print('trainer')
 
     return _trainer
 
@@ -69,11 +73,13 @@ def train(config):
     _trainer = get_trainer(config)
 
     checkpoints = sorted(glob.glob(_trainer.checkpoints_dir + '/*.pt'))
+    print('checkpoints')
 
     if len(checkpoints):
         _trainer.load(checkpoints[-1])
 
     last_epoch = _trainer.current_epoch
+    print('last_epoch')
 
     predicted_path = 'tmp/predicted-train.txt'
     # if shuffled or sorted by length -> should update target_path accordingly
@@ -92,11 +98,11 @@ def train(config):
     for epoch in range(last_epoch, config['epochs']):
         predictions, epoch_loss, epoch_acc = _trainer.train_one_epoch()
         checkpoint = _trainer.save(epoch+1, epoch_loss, epoch_acc)
-
         bleu_message, edit_message = bleu_and_edit_distance(predictions, predicted_path, target_path)
         logger(bleu_message)
         logger(edit_message)
         evaluate('validation', config, checkpoint)
+
 
 def evaluate(evalset, config, checkpoint=None):
 
@@ -131,11 +137,17 @@ def evaluate(evalset, config, checkpoint=None):
         }
         loader = utils.data_loader(_trainer.train_loader.vocab, test_loader_config)
 
+    # if loader.has_label:
+    #     predictions, attn_weights, loss, acc = _trainer.evaluate(loader, config['generation_method'])
+    #     logger('loss={}, acc={}'.format(loss, acc))
+    # else:
+    #     predictions, attn_weights = _trainer.evaluate(loader, config['generation_method'])
+
     if loader.has_label:
-        predictions, attn_weights, loss, acc = _trainer.evaluate(loader, config['generation_method'])
+        predictions, loss, acc = _trainer.evaluate(loader, config['generation_method'])
         logger('loss={}, acc={}'.format(loss, acc))
     else:
-        predictions, attn_weights = _trainer.evaluate(loader, config['generation_method'])
+        predictions = _trainer.evaluate(loader, config['generation_method'])
 
     target_path = config['formulas_validation_path'] if evalset == 'validation' else config['formulas_test_path']
     predicted_path = 'tmp/predicted-{}.txt'.format(evalset)
@@ -161,10 +173,11 @@ def bleu_and_edit_distance(predictions, predicted_path, target_path):
 
 def process_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train", const=True, nargs='?', help='start training')
+    #parser.add_argument("--train", const=True, nargs='?', help='start training')
     parser.add_argument("--evaluate", const=True, nargs='?', help='start evaluation')
     parser.add_argument("--evalset", type=str, help='test or validation')
     parser.add_argument("--checkpoint", type=str, help='path to checkpoint')
+    parser.add_argument("--train", const=True, nargs='?', default = 1, help='start evaluation')
     args = parser.parse_args()
     return args
 
@@ -175,4 +188,3 @@ if __name__ == '__main__':
         train(config)
     elif args.evaluate:
         evaluate(args.evalset, params.config, args.checkpoint)
-    
