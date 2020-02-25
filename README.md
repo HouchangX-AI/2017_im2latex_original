@@ -1,7 +1,11 @@
 # 2017_im2latex_original
 arXiv: 1609.04938
 
-The code mainly uses BahdanauAttention, which in /src/decoder.py.
-Generator uses Greedy or Beam-search.
+这个代码是根据arXiv: 1609.04938进行改编的，去除attention后的模型。encoder为multi-CNN，decoder为RNN。
 
-The dataset given in the paper has been divided into train, test and validate.
+# 训练和参数 
+具体参数见params.py。
+
+```
+python main.py --train
+```
