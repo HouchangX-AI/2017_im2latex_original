@@ -10,12 +10,12 @@ def get_trainer(config):
         'pathes' : [config['formulas_train_path'], config['formulas_validation_path']],
         'unk_token_threshold' : config['unk_token_threshold'],
     }
-    vocab = utils.Vocab(vocab_config)
-    vocab_size = len(vocab.token2idx.keys())
-    cnn_model = cnn.CNN(config['cnn_params']).to(config['device'])
+    vocab = utils.Vocab(vocab_config)        # 构建并存储fomula的token表；fomula2tensor与tensor2fomula，return tensor和fomula字符串
+    vocab_size = len(vocab.token2idx.keys())        # token个数
+    cnn_model = cnn.CNN(config['cnn_params']).to(config['device'])        # 构建cnn模型,提取特征返回x
     encoder_model = encoder.Encoder(config['cnn_params']['conv6_c'], config['encoder_hidden_size'],
                                     config['bidirectional'], config['device']).to(config['device'])
-
+                                    # 构建encoder模型，输入x，计算方向
     train_loader_config = {
         'batch_size' : config['batch_size'],
         'images_path' : config['images_train_path'],
@@ -24,7 +24,7 @@ def get_trainer(config):
         'shuffle' : False,
     }
 
-    train_loader = utils.data_loader(vocab, train_loader_config)
+    train_loader = utils.data_loader(vocab, train_loader_config)        #
 
     embedding_model = embedding.Embedding(vocab_size, config['embedding_size'], vocab.pad_token).to(config['device'])
     print('embedding')
