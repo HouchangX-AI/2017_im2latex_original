@@ -5,12 +5,12 @@ config = {
     #        pathes
     # ======================
 
-    'formulas_train_path' : '/Users/jin/PycharmProjects/2017_im2latex_jin/Dataset/train_fomula.txt',
-    'formulas_validation_path' : '/Users/jin/PycharmProjects/2017_im2latex_jin/Dataset/val_formula.txt',
-    'formulas_test_path' : '/Users/jin/PycharmProjects/2017_im2latex_jin/Dataset/test_formula.txt',
-    'images_train_path' : '/Users/jin/PycharmProjects/2017_im2latex_jin/Dataset/train_images',
-    'images_validation_path' : '/Users/jin/PycharmProjects/2017_im2latex_jin/Dataset/val_images',
-    'images_test_path' : '/Users/jin/PycharmProjects/2017_im2latex_jin/Dataset/test_images',
+    'formulas_train_path' : '',
+    'formulas_validation_path' : '',
+    'formulas_test_path' : '',
+    'images_train_path' : '',
+    'images_validation_path' : '',
+    'images_test_path' : '',
 
     'checkpoints_dir' : 'checkpoints/',
 
@@ -18,9 +18,9 @@ config = {
     # ======================
     #   general parameters
     # ======================
-    'batch_size' : 3, #32
+    'batch_size' : 32, 
     'epochs' : 40,
-    'print_every_batch' : 50,
+    'print_every_batch' : 100,
     'learning_rate' : 1e-3,
     'learning_rate_decay' : .5,
     'learning_rate_decay_step' : 3,
@@ -33,6 +33,7 @@ config = {
     'unk_token_threshold' : 10,
     'generation_method' : 'greedy', # or 'beam-search'
     'device' : torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+    
     # ======================
     #   CNN parameters
     # ======================
@@ -89,5 +90,5 @@ config = {
     'embedding_size' : 80,
     'decoder_hidden_size' : 512,
     'encoder_hidden_size' : 256,
-    'bidirectional' : True,
+    'bidirectional' : True,  # 选择单向或双向
 }
