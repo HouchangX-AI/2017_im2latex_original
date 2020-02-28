@@ -24,18 +24,17 @@ def get_trainer(config):
         'shuffle' : False,
     }
 
-    train_loader = utils.data_loader(vocab, train_loader_config)        #
+    train_loader = utils.data_loader(vocab, train_loader_config)        # 导入数据，并判断是否为end_of_batch
 
-    embedding_model = embedding.Embedding(vocab_size, config['embedding_size'], vocab.pad_token).to(config['device'])
-    print('embedding')
-
+    embedding_model = embedding.Embedding(vocab_size, config['embedding_size'], vocab.pad_token).to(config['device'])     
+    # 对token表中的token进行词嵌入
+    
     decoder_model = decoder.DecoderRNN(config['embedding_size'], config['decoder_hidden_size'],
                                         config['encoder_hidden_size']*(2 if config['bidirectional'] else 1), vocab_size,
-                                        config['device']).to(config['device'])
+                                        config['device']).to(config['device'])     # 构建RNN模型，返回分数
 
-    print('decoder')
     _model = model.Model(cnn_model, encoder_model, embedding_model, decoder_model, config['device'])
-    print('model')
+    # 构建整体模型，加入positional embedding，调用generator model
 
     trainer_config = {
         'device' : config['device'],
@@ -53,9 +52,7 @@ def get_trainer(config):
         'teacher_forcing_ratio_min': config['teacher_forcing_ratio_min'],
     }
 
-    _trainer = trainer.Trainer(_model, train_loader, trainer_config)
-    print('trainer')
-
+    _trainer = trainer.Trainer(_model, train_loader, trainer_config)    # 模型训练train_one_epoch
     return _trainer
 
 def train(config):
@@ -112,69 +109,67 @@ def evaluate(evalset, config, checkpoint=None):
     }
     logger = utils.Logger(logger_config)
 
-    _trainer = get_trainer(config)
+    _trainer = get_trainer(config)     # 调用本py文件中函数get_trainer↑
 
-    if checkpoint is None:
+    if checkpoint is None:       # 检查是否有可用checkpoint
         checkpoints = sorted(glob.glob(_trainer.checkpoints_dir + '/*.pt'))
         assert(len(checkpoints))
         checkpoint = checkpoints[-1]
-    _trainer.load(checkpoint)
+    _trainer.load(checkpoint)    # 导入checkpoint
 
+    #------------分为train，test，validation.根据选用的是validation or test执行以下步骤--------
     if evalset == 'validation':
         valid_loader_config = {
             'batch_size': config['batch_size'],
             'images_path': config['images_validation_path'],
             'formulas_path': config['formulas_validation_path'],
         }
-        loader = utils.data_loader(_trainer.train_loader.vocab, valid_loader_config)
+        loader = utils.data_loader(_trainer.train_loader.vocab, valid_loader_config)   # 导入validation数据
     elif evalset == 'test':
         test_loader_config = {
             'batch_size': config['batch_size'],
             'images_path': config['images_test_path'],
         }
-        loader = utils.data_loader(_trainer.train_loader.vocab, test_loader_config)
+        loader = utils.data_loader(_trainer.train_loader.vocab, test_loader_config)   # 导入test数据
 
-    # if loader.has_label:
-    #     predictions, attn_weights, loss, acc = _trainer.evaluate(loader, config['generation_method'])
-    #     logger('loss={}, acc={}'.format(loss, acc))
-    # else:
-    #     predictions, attn_weights = _trainer.evaluate(loader, config['generation_method'])
-
-    if loader.has_label:
+    #------------有label的情况下，计算validation的acc等，没有label，test不进行计算，仅进行预测---------
+    #-----------实际上，validation的计算过程跟train一样；test只进行bleu和edit_distance的评估---------
+    
+    if loader.has_label:    # 是否存在validation_path
         predictions, loss, acc = _trainer.evaluate(loader, config['generation_method'])
         logger('loss={}, acc={}'.format(loss, acc))
     else:
         predictions = _trainer.evaluate(loader, config['generation_method'])
+    
+    # 确定是test/validation的formula_path
+    target_path = config['formulas_validation_path'] if evalset == 'validation' else config['formulas_test_path']  
+    predicted_path = 'tmp/predicted-{}.txt'.format(evalset)     # 预测的fomula_path
 
-    target_path = config['formulas_validation_path'] if evalset == 'validation' else config['formulas_test_path']
-    predicted_path = 'tmp/predicted-{}.txt'.format(evalset)
-
-    bleu_message, edit_message = bleu_and_edit_distance(predictions, predicted_path, target_path)
+    bleu_message, edit_message = bleu_and_edit_distance(predictions, predicted_path, target_path)     # 评估↓
 
     logger(bleu_message)
     logger(edit_message)
 
 def bleu_and_edit_distance(predictions, predicted_path, target_path):
-    with open(predicted_path, 'w') as f:
+    with open(predicted_path, 'w') as f:      
         for pred in predictions:
             f.write(pred+'\n')
     output = subprocess.check_output('python src/Evaluation/bleu_score.py --target-formulas {} --predicted-formulas {} --ngram 5'.
-                format(target_path, predicted_path), shell=True)
+                format(target_path, predicted_path), shell=True)    # 调用bleu，并检查输出
     output = str(output)
-    bleu_message = output[output.find('BLEU'):-3]
+    bleu_message = output[output.find('BLEU'):-3]     # find用找到子字符串的最低索引
     output = subprocess.check_output('python src/Evaluation/edit_distance.py --target-formulas {} --predicted-formulas {}'.
-                format(target_path, predicted_path), shell=True)
+                format(target_path, predicted_path), shell=True)    # 调用edit_distance，并检查输出
     output = str(output)
     edit_message = output[output.find('Edit'):-3]
     return bleu_message, edit_message
 
 def process_args():
     parser = argparse.ArgumentParser()
-    #parser.add_argument("--train", const=True, nargs='?', help='start training')
+    parser.add_argument("--train", const=True, nargs='?', help='start training')
     parser.add_argument("--evaluate", const=True, nargs='?', help='start evaluation')
     parser.add_argument("--evalset", type=str, help='test or validation')
     parser.add_argument("--checkpoint", type=str, help='path to checkpoint')
-    parser.add_argument("--train", const=True, nargs='?', default = 1, help='start evaluation')
     args = parser.parse_args()
     return args
 
