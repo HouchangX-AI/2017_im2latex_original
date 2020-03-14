@@ -118,7 +118,7 @@ class Trainer:
                     self.logger('batch {} completed.'.format(batch_counter))
             self.logger('evaluation finished.')
 
-            # 改
+           
             if eval_loader.has_label:
                 return predictions, attn_weights, epoch_loss/batch_counter, epoch_acc/batch_counter
             else:
