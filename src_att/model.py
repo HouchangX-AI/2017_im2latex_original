@@ -114,7 +114,7 @@ class Model(nn.Module):
         logits = torch.zeros(y.shape[0], y.shape[1], self.decoder.output_size, device=self.device) # (batch, len, vocab_size)
         logits[:, 0, y[0, 0]] = 1
 
-        # 含有attn_weight, 改  teacher_forcing_ratio decoder预测时用真实值
+        # teacher_forcing_ratio decoder预测时用真实值
         for t in range(1, y.shape[1]):
             output, (hn, cn), on, attn_weight = self.decoder_step(next_token, hn, cn, on, encoder_outputs)
             logits[:, t, :] = output
