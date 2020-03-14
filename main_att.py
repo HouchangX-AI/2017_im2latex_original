@@ -1,4 +1,4 @@
-from src import utils, encoder, decoder, model, trainer, cnn, embedding
+from src_att import utils, encoder, decoder, model, trainer, cnn, embedding
 import params
 import glob, subprocess
 import sys
@@ -12,9 +12,7 @@ def get_trainer(config):
     }
     vocab = utils.Vocab(vocab_config)
     vocab_size = len(vocab.token2idx.keys())
-    # encoder中提取图片的features，multi-CNN，return x
     cnn_model = cnn.CNN(config['cnn_params']).to(config['device'])
-    #
     encoder_model = encoder.Encoder(config['cnn_params']['conv6_c'], config['encoder_hidden_size'],
                                     config['bidirectional'], config['device']).to(config['device'])
 
@@ -28,13 +26,10 @@ def get_trainer(config):
 
     # config: vocab, batch_size, images_path, formulas_path=None, sort_by_formulas_len=False, shuffle=False):
     train_loader = utils.data_loader(vocab, train_loader_config)
-    # 一个保存了固定字典和大小的简单查找表，模块的输入是一个下标的列表，输出是对应的词嵌入
     embedding_model = embedding.Embedding(vocab_size, config['embedding_size'], vocab.pad_token).to(config['device'])
-    # 包含attention模型，改成encoder-decoder时需要去掉
     decoder_model = decoder.AttnDecoder(config['embedding_size'], config['decoder_hidden_size'],
                                         config['encoder_hidden_size']*(2 if config['bidirectional'] else 1), vocab_size,
                                         config['device']).to(config['device'])
-    # 存在attention，需更改
     _model = model.Model(cnn_model, encoder_model, embedding_model, decoder_model, config['device'])
 
     trainer_config = {
