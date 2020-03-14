@@ -33,8 +33,3 @@ class GreedyDecoder:
         attn_weights = torch.stack(attn_weights, dim=1)
         return preds, logits, attn_weights
 
-class BeamSearchDecoder:
-    def __init__(self):
-        pass
-    def generate(self):
-        pass
