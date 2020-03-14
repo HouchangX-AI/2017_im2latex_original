@@ -116,7 +116,6 @@ class data_loader:
         self.cursor = 0
         self.images = glob.glob(self.images_path + '/*.png')
         self.images.sort()
-        self.images.sort(key=len)
         self.has_label = (self.formulas_path is not None)
         if self.has_label:
             with open(self.formulas_path, 'r') as f:
