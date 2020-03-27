@@ -119,7 +119,7 @@ class Model(nn.Module):
             output, (hn, cn), on, attn_weight = self.decoder_step(next_token, hn, cn, on, encoder_outputs)
             logits[:, t, :] = output
             if teacher_forcing_ratio < torch.rand(1).item():
-                next_token = output.multinomial(1).squeeze(1) # (batch)
+                next_token = output.softmax(-1).multinomial(1).squeeze(1) # (batch)
             else:
                 next_token = y[:, t] # (batch)
         return logits

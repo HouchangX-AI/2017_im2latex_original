@@ -3,6 +3,7 @@ import params
 import glob, subprocess
 import sys
 import argparse
+from Evaluation import edit_distance_, bleu_score_
 
 def get_trainer(config):
 
@@ -12,7 +13,9 @@ def get_trainer(config):
     }
     vocab = utils.Vocab(vocab_config)
     vocab_size = len(vocab.token2idx.keys())
+    print(vocab_size)
     cnn_model = cnn.CNN(config['cnn_params']).to(config['device'])
+
     encoder_model = encoder.Encoder(config['cnn_params']['conv6_c'], config['encoder_hidden_size'],
                                     config['bidirectional'], config['device']).to(config['device'])
 
@@ -20,16 +23,17 @@ def get_trainer(config):
         'batch_size' : config['batch_size'],
         'images_path' : config['images_train_path'],
         'formulas_path' : config['formulas_train_path'],
-        'sort_by_formulas_len' : True,
-        'shuffle' : False,
+        'sort_by_formulas_len' : False,
+        'shuffle' : True,
     }
-
-    # config: vocab, batch_size, images_path, formulas_path=None, sort_by_formulas_len=False, shuffle=False):
     train_loader = utils.data_loader(vocab, train_loader_config)
+
     embedding_model = embedding.Embedding(vocab_size, config['embedding_size'], vocab.pad_token).to(config['device'])
+
     decoder_model = decoder.AttnDecoder(config['embedding_size'], config['decoder_hidden_size'],
                                         config['encoder_hidden_size']*(2 if config['bidirectional'] else 1), vocab_size,
                                         config['device']).to(config['device'])
+
     _model = model.Model(cnn_model, encoder_model, embedding_model, decoder_model, config['device'])
 
     trainer_config = {
@@ -75,8 +79,6 @@ def train(config):
     target_path = config['formulas_train_path']
     dot = target_path.rfind('.')
     target_path = target_path[:dot] + '_' + target_path[dot:]
-
-
     if _trainer.train_loader.shuffle or _trainer.train_loader.sort_by_formulas_len:
         f = open(target_path, 'w')
         for formula in _trainer.train_loader.formulas:
@@ -141,17 +143,23 @@ def evaluate(evalset, config, checkpoint=None):
     logger(edit_message)
 
 def bleu_and_edit_distance(predictions, predicted_path, target_path):
+    # with open(predicted_path, 'w') as f:
+    #     for pred in predictions:
+    #         f.write(pred+'\n')
+    # output = subprocess.check_output('python src/Evaluation/bleu_score.py --target-formulas {} --predicted-formulas {} --ngram 5'.
+    #             format(target_path, predicted_path), shell=True)
+    # output = str(output)
+    # bleu_message = output[output.find('BLEU'):-3]
+    # output = subprocess.check_output('python src/Evaluation/edit_distance.py --target-formulas {} --predicted-formulas {}'.
+    #             format(target_path, predicted_path), shell=True)
+    # output = str(output)
+    # edit_message = output[output.find('Edit'):-3]
+    # return bleu_message, edit_message
     with open(predicted_path, 'w') as f:
         for pred in predictions:
             f.write(pred+'\n')
-    output = subprocess.check_output('python src/Evaluation/bleu_score.py --target-formulas {} --predicted-formulas {} --ngram 5'.
-                format(target_path, predicted_path), shell=True)
-    output = str(output)
-    bleu_message = output[output.find('BLEU'):-3]
-    output = subprocess.check_output('python src/Evaluation/edit_distance.py --target-formulas {} --predicted-formulas {}'.
-                format(target_path, predicted_path), shell=True)
-    output = str(output)
-    edit_message = output[output.find('Edit'):-3]
+    bleu_message = bleu_score_.bleu_score(target_path, predicted_path, ngram=5)
+    edit_message = edit_distance_.edit_distance(target_path, predicted_path)
     return bleu_message, edit_message
 
 def process_args():
